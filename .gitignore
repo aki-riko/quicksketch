@@ -1,0 +1,32 @@
+# 虚拟环境
+.venv/
+venv/
+
+# 打包生成物
+build/
+dist/
+installer/
+*.spec
+
+# Nuitka 中间产物
+*.build/
+*.dist/
+*.onefile-build/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 调试临时文件
+_*.py
+_*.png
+*.log
+
+# Codex 真实配置备份(若误入目录)
+config.toml.bak
+auth.json.bak
+
+# 系统
+Thumbs.db
+.DS_Store

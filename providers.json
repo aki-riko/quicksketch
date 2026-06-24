@@ -1,0 +1,12 @@
+{
+  "_说明": "Codex 中转预置列表。程序启动时读取填充下拉框。可自行增删条目。",
+  "_字段": "name=显示名 baseUrl=接口地址 provider=配置块名 wireApi=responses model=默认模型",
+  "_示例": {
+    "name": "https://api.example.com",
+    "baseUrl": "https://api.example.com/v1",
+    "provider": "relay",
+    "wireApi": "responses",
+    "model": "gpt-5.5"
+  },
+  "presets": []
+}
