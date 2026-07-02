@@ -25,7 +25,7 @@ if exist build rmdir /s /q build
   --output-filename=CodexConfig.exe ^
   --company-name=9li ^
   --product-name=Codex配置助手 ^
-  --file-version=1.0.1 ^
+  --file-version=1.0.2 ^
   main.py
 
 echo.

@@ -15,6 +15,30 @@ Item {
     property bool fRequiresAuth: false
     property string fReasoningEffort: ""
     property bool fDisableStorage: false
+    property string fContextWindow: ""
+    property string fAutoCompactLimit: ""
+    property string fToolOutputLimit: ""
+    readonly property real contextWindowNumber: parsePositive(fContextWindow)
+    readonly property real autoCompactNumber: parsePositive(fAutoCompactLimit)
+    readonly property real compactRatio: contextWindowNumber > 0 && autoCompactNumber > 0
+                                         ? Math.min(1, autoCompactNumber / contextWindowNumber)
+                                         : 0
+
+    function parsePositive(value) {
+        var n = Number(value)
+        return isFinite(n) && n > 0 ? n : 0
+    }
+
+    function compactRatioText() {
+        if (contextWindowNumber <= 0 || autoCompactNumber <= 0) return "未设置"
+        return Math.round((autoCompactNumber / contextWindowNumber) * 1000) / 10 + "%"
+    }
+
+    function useGpt55LongContext() {
+        fContextWindow = "1050000"
+        fAutoCompactLimit = "900000"
+        fToolOutputLimit = "6000"
+    }
 
     function syncFromConfig() {
         fProvider = (CodexConfig && CodexConfig.provider) || "relay"
@@ -24,6 +48,9 @@ Item {
         fRequiresAuth    = CodexConfig ? CodexConfig.requiresAuth : false
         fReasoningEffort = (CodexConfig && CodexConfig.reasoningEffort) || ""
         fDisableStorage  = CodexConfig ? CodexConfig.disableStorage : false
+        fContextWindow = (CodexConfig && CodexConfig.modelContextWindow) || ""
+        fAutoCompactLimit = (CodexConfig && CodexConfig.modelAutoCompactTokenLimit) || ""
+        fToolOutputLimit = (CodexConfig && CodexConfig.toolOutputTokenLimit) || ""
     }
     Component.onCompleted: syncFromConfig()
 
@@ -272,6 +299,117 @@ Item {
                         }
                     }
 
+                    Item { width: 1; height: Fluent.Enums.spacing.xs }
+                    Column {
+                        width: parent ? parent.width - Fluent.Enums.spacing.l * 2 : 0
+                        spacing: Fluent.Enums.spacing.s
+
+                        Row {
+                            width: parent ? parent.width : 0
+                            spacing: Fluent.Enums.spacing.m
+                            Text {
+                                text: "上下文预算"
+                                anchors.verticalCenter: parent.verticalCenter
+                                font.pixelSize: Fluent.Enums.typography.caption
+                                color: Fluent.Enums.textColor.tertiary
+                                font.family: Fluent.Enums.fontFamily
+                            }
+                            Text {
+                                text: "自动压缩阈值占窗口 " + root.compactRatioText()
+                                anchors.verticalCenter: parent.verticalCenter
+                                font.pixelSize: Fluent.Enums.typography.caption
+                                color: Fluent.Enums.textColor.secondary
+                                font.family: Fluent.Enums.fontFamily
+                            }
+                        }
+
+                        Rectangle {
+                            width: parent ? parent.width : 0
+                            height: 12
+                            radius: 6
+                            color: "#E5E7EB"
+                            clip: true
+
+                            Rectangle {
+                                height: parent.height
+                                radius: parent.radius
+                                width: Math.max(0, Math.min(parent.width, parent.width * root.compactRatio))
+                                color: root.compactRatio >= 0.8 ? "#16A34A" : "#2563EB"
+                            }
+                        }
+
+                        Grid {
+                            width: parent ? parent.width : 0
+                            columns: 2
+                            rowSpacing: Fluent.Enums.spacing.s
+                            columnSpacing: Fluent.Enums.spacing.m
+                            verticalItemAlignment: Grid.AlignVCenter
+
+                            Text { text: "上下文窗口"; width: 190; color: Fluent.Enums.textColor.tertiary; font.pixelSize: Fluent.Enums.typography.body; font.family: Fluent.Enums.fontFamily }
+                            Fluent.LineEdit {
+                                id: contextWindowEdit
+                                width: 220
+                                placeholderText: "1050000"
+                                Component.onCompleted: text = root.fContextWindow
+                                onTextChanged: if (text !== root.fContextWindow) root.fContextWindow = text
+                                Connections {
+                                    target: root
+                                    function onFContextWindowChanged() {
+                                        if (contextWindowEdit.text !== root.fContextWindow) contextWindowEdit.text = root.fContextWindow
+                                    }
+                                }
+                            }
+
+                            Text { text: "自动压缩阈值"; width: 190; color: Fluent.Enums.textColor.tertiary; font.pixelSize: Fluent.Enums.typography.body; font.family: Fluent.Enums.fontFamily }
+                            Fluent.LineEdit {
+                                id: autoCompactEdit
+                                width: 220
+                                placeholderText: "900000"
+                                Component.onCompleted: text = root.fAutoCompactLimit
+                                onTextChanged: if (text !== root.fAutoCompactLimit) root.fAutoCompactLimit = text
+                                Connections {
+                                    target: root
+                                    function onFAutoCompactLimitChanged() {
+                                        if (autoCompactEdit.text !== root.fAutoCompactLimit) autoCompactEdit.text = root.fAutoCompactLimit
+                                    }
+                                }
+                            }
+
+                            Text { text: "工具输出保留"; width: 190; color: Fluent.Enums.textColor.tertiary; font.pixelSize: Fluent.Enums.typography.body; font.family: Fluent.Enums.fontFamily }
+                            Fluent.LineEdit {
+                                id: toolOutputEdit
+                                width: 220
+                                placeholderText: "6000"
+                                Component.onCompleted: text = root.fToolOutputLimit
+                                onTextChanged: if (text !== root.fToolOutputLimit) root.fToolOutputLimit = text
+                                Connections {
+                                    target: root
+                                    function onFToolOutputLimitChanged() {
+                                        if (toolOutputEdit.text !== root.fToolOutputLimit) toolOutputEdit.text = root.fToolOutputLimit
+                                    }
+                                }
+                            }
+                        }
+
+                        Row {
+                            spacing: Fluent.Enums.spacing.m
+                            Fluent.Button {
+                                style: Fluent.Enums.button.style_default
+                                text: "套用 GPT-5.5 长上下文"
+                                onClicked: root.useGpt55LongContext()
+                            }
+                            Fluent.Button {
+                                style: Fluent.Enums.button.style_default
+                                text: "清空"
+                                onClicked: {
+                                    root.fContextWindow = ""
+                                    root.fAutoCompactLimit = ""
+                                    root.fToolOutputLimit = ""
+                                }
+                            }
+                        }
+                    }
+
                     // 操作按钮
                     Row {
                         spacing: Fluent.Enums.spacing.m
@@ -286,7 +424,10 @@ Item {
                                 "model": root.fModel,
                                 "requiresAuth": root.fRequiresAuth,
                                 "reasoningEffort": root.fReasoningEffort,
-                                "disableStorage": root.fDisableStorage
+                                "disableStorage": root.fDisableStorage,
+                                "modelContextWindow": root.fContextWindow,
+                                "modelAutoCompactTokenLimit": root.fAutoCompactLimit,
+                                "toolOutputTokenLimit": root.fToolOutputLimit
                             })
                         }
                         Fluent.Button {

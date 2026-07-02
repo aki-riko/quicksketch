@@ -20,6 +20,7 @@ from PySide6.QtCore import QObject, Signal, Slot, Property
 
 DEFAULT_WIRE_API = "responses"
 DEFAULT_MODEL = "gpt-5.5"
+_KEEP = object()
 
 
 def _codex_home() -> str:
@@ -51,6 +52,9 @@ class CodexConfig(QObject):
         self._requires_auth = False
         self._reasoning_effort = ""
         self._disable_storage = False
+        self._model_context_window = ""
+        self._model_auto_compact_token_limit = ""
+        self._tool_output_token_limit = ""
         self._available_models = []
         self._presets = []
         self._load_presets()
@@ -115,6 +119,18 @@ class CodexConfig(QObject):
     def disableStorage(self):
         return self._disable_storage
 
+    @Property(str, notify=changed)
+    def modelContextWindow(self):
+        return self._model_context_window
+
+    @Property(str, notify=changed)
+    def modelAutoCompactTokenLimit(self):
+        return self._model_auto_compact_token_limit
+
+    @Property(str, notify=changed)
+    def toolOutputTokenLimit(self):
+        return self._tool_output_token_limit
+
     @Property("QVariantList", notify=modelsChanged)
     def availableModels(self):
         return self._available_models
@@ -137,6 +153,9 @@ class CodexConfig(QObject):
         self._requires_auth = False
         self._reasoning_effort = ""
         self._disable_storage = False
+        self._model_context_window = ""
+        self._model_auto_compact_token_limit = ""
+        self._tool_output_token_limit = ""
         if tomllib and os.path.isfile(self._config_path):
             try:
                 with open(self._config_path, "rb") as f:
@@ -145,6 +164,9 @@ class CodexConfig(QObject):
                 self._model = str(data.get("model", ""))
                 self._reasoning_effort = str(data.get("model_reasoning_effort", ""))
                 self._disable_storage = bool(data.get("disable_response_storage", False))
+                self._model_context_window = self._number_to_text(data.get("model_context_window"))
+                self._model_auto_compact_token_limit = self._number_to_text(data.get("model_auto_compact_token_limit"))
+                self._tool_output_token_limit = self._number_to_text(data.get("tool_output_token_limit"))
                 prov = data.get("model_providers", {}).get(self._provider, {})
                 self._base_url = str(prov.get("base_url", ""))
                 self._wire_api = str(prov.get("wire_api", ""))
@@ -178,6 +200,40 @@ class CodexConfig(QObject):
         return f'{key} = {rhs}\n' + text
 
     @staticmethod
+    def _set_top_integer(text, key, value):
+        if value is None:
+            return re.sub(rf'(?m)^\s*{re.escape(key)}\s*=.*\n?', '', text, count=1)
+        rhs = str(int(value))
+        if re.search(rf'(?m)^\s*{re.escape(key)}\s*=', text):
+            return re.sub(rf'(?m)^(\s*{re.escape(key)}\s*=\s*).*$',
+                          rf'\g<1>{rhs}', text, count=1)
+        return f'{key} = {rhs}\n' + text
+
+    @staticmethod
+    def _number_to_text(value):
+        if value is None:
+            return ""
+        try:
+            return str(int(value))
+        except Exception:
+            return str(value)
+
+    @staticmethod
+    def _optional_positive_int(value, field_name):
+        if value is None:
+            return None
+        text = str(value).strip()
+        if not text:
+            return None
+        try:
+            parsed = int(text)
+        except Exception as exc:
+            raise ValueError(f"{field_name} 必须是整数") from exc
+        if parsed <= 0:
+            raise ValueError(f"{field_name} 必须大于 0")
+        return parsed
+
+    @staticmethod
     def _set_block_scalar(block, key, value, is_str=True):
         """设置/删除 provider 块内标量字段。value 为 None 时删除。"""
         if value is None:
@@ -190,7 +246,8 @@ class CodexConfig(QObject):
 
     def _write_provider_block(self, text, provider, base_url, wire_api, model,
                               requires_auth=None, reasoning_effort=None,
-                              disable_storage=None):
+                              disable_storage=None, context_window=_KEEP,
+                              auto_compact_limit=_KEEP, tool_output_limit=_KEEP):
         provider = provider or "relay"
         # 1. 顶层 model_provider
         if re.search(r'(?m)^\s*model_provider\s*=', text):
@@ -208,6 +265,12 @@ class CodexConfig(QObject):
         if disable_storage is not None:
             text = self._set_top_scalar(text, "disable_response_storage",
                                         disable_storage, is_str=False)
+        if context_window is not _KEEP:
+            text = self._set_top_integer(text, "model_context_window", context_window)
+        if auto_compact_limit is not _KEEP:
+            text = self._set_top_integer(text, "model_auto_compact_token_limit", auto_compact_limit)
+        if tool_output_limit is not _KEEP:
+            text = self._set_top_integer(text, "tool_output_token_limit", tool_output_limit)
         # 3. [model_providers.<provider>] 块
         esc = re.escape(provider)
         block_re = re.compile(rf'(?ms)^\s*\[model_providers\.{esc}\]\s*.*?(?=^\s*\[|\Z)')
@@ -253,6 +316,21 @@ class CodexConfig(QObject):
         eff = None if eff is None else str(eff).strip()
         dis = None if dis is None else bool(dis)
         try:
+            context_window = (_KEEP if "modelContextWindow" not in cfg
+                              else self._optional_positive_int(
+                                  cfg.get("modelContextWindow"), "model_context_window"))
+            auto_compact_limit = (_KEEP if "modelAutoCompactTokenLimit" not in cfg
+                                  else self._optional_positive_int(
+                                      cfg.get("modelAutoCompactTokenLimit"),
+                                      "model_auto_compact_token_limit"))
+            tool_output_limit = (_KEEP if "toolOutputTokenLimit" not in cfg
+                                 else self._optional_positive_int(
+                                     cfg.get("toolOutputTokenLimit"),
+                                     "tool_output_token_limit"))
+        except ValueError as e:
+            self.notify.emit(2, "参数无效", str(e))
+            return
+        try:
             text = ""
             if os.path.isfile(self._config_path):
                 shutil.copy2(self._config_path, self._config_path + ".bak")
@@ -262,7 +340,10 @@ class CodexConfig(QObject):
                 os.makedirs(self._home, exist_ok=True)
             new_text = self._write_provider_block(
                 text, provider, base_url, wire_api, model,
-                requires_auth=req, reasoning_effort=eff, disable_storage=dis)
+                requires_auth=req, reasoning_effort=eff, disable_storage=dis,
+                context_window=context_window,
+                auto_compact_limit=auto_compact_limit,
+                tool_output_limit=tool_output_limit)
             with open(self._config_path, "w", encoding="utf-8", newline="") as f:
                 f.write(new_text)
             self.reload()
@@ -358,4 +439,3 @@ class CodexConfig(QObject):
             self.notify.emit(3, "获取失败", f"HTTP {e.code}: {e.reason}")
         except Exception as e:
             self.notify.emit(3, "获取失败", str(e))
-
