@@ -32,6 +32,9 @@ QtObject {
     Component.onCompleted: {
         Fluent.Translator.setLanguage(Fluent.Enums.lang.zh_CN)
         windowInstance = windowComponent.createObject(null)
+        if (windowInstance) {
+            windowInstance.show()
+        }
     }
     Component.onDestruction: { if (windowInstance) windowInstance.destroy() }
 
