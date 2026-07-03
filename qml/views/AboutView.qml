@@ -68,7 +68,7 @@ Item {
                         font.family: Fluent.Enums.fontFamily
                     }
                     Text {
-                        text: "基于 PrismQML (prismqml 0.2.14) · MIT"
+                        text: "基于 PrismQML (prismqml 0.2.19) · MIT"
                         font.pixelSize: Fluent.Enums.typography.body
                         color: Fluent.Enums.textColor.secondary
                         font.family: Fluent.Enums.fontFamily

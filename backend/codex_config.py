@@ -21,10 +21,10 @@ from PySide6.QtCore import QObject, Signal, Slot, Property
 
 DEFAULT_WIRE_API = "responses"
 DEFAULT_MODEL = "gpt-5.5"
-GPT55_LONG_CONTEXT_WINDOW = 1050000
-GPT55_LONG_AUTO_COMPACT_LIMIT = 900000
-GPT55_LONG_TOOL_OUTPUT_LIMIT = 6000
-GPT55_LONG_CONTEXT_CATALOG = "gpt-5.5-1m.json"
+GPT55_STABLE_CONTEXT_WINDOW = 258400
+GPT55_STABLE_AUTO_COMPACT_LIMIT = 245000
+GPT55_STABLE_TOOL_OUTPUT_LIMIT = 6000
+GPT55_MANAGED_CONTEXT_CATALOG = "gpt-5.5-1m.json"
 _KEEP = object()
 
 
@@ -245,7 +245,7 @@ class CodexConfig(QObject):
         return raw.strip("\"'")
 
     def _managed_model_catalog_path(self):
-        return os.path.join(self._home, "model-catalogs", GPT55_LONG_CONTEXT_CATALOG)
+        return os.path.join(self._home, "model-catalogs", GPT55_MANAGED_CONTEXT_CATALOG)
 
     def _set_managed_model_catalog_json(self, text, value):
         if value:
@@ -511,8 +511,13 @@ class CodexConfig(QObject):
         try:
             model_catalog_json = _KEEP
             if context_window is not _KEEP:
-                if model == DEFAULT_MODEL and context_window and context_window >= GPT55_LONG_CONTEXT_WINDOW:
-                    model_catalog_json = self._ensure_gpt55_long_context_catalog(context_window)
+                if model == DEFAULT_MODEL:
+                    if context_window and context_window > GPT55_STABLE_CONTEXT_WINDOW:
+                        context_window = GPT55_STABLE_CONTEXT_WINDOW
+                    if (auto_compact_limit is not _KEEP and auto_compact_limit and
+                            auto_compact_limit > GPT55_STABLE_AUTO_COMPACT_LIMIT):
+                        auto_compact_limit = GPT55_STABLE_AUTO_COMPACT_LIMIT
+                    model_catalog_json = None
                 elif context_window is None:
                     model_catalog_json = None
 

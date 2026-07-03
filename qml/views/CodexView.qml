@@ -36,8 +36,8 @@ Item {
 
     function useGpt55LongContext() {
         fModel = "gpt-5.5"
-        fContextWindow = "1050000"
-        fAutoCompactLimit = "900000"
+        fContextWindow = "258400"
+        fAutoCompactLimit = "245000"
         fToolOutputLimit = "6000"
     }
 
@@ -350,7 +350,7 @@ Item {
                             Fluent.LineEdit {
                                 id: contextWindowEdit
                                 width: 220
-                                placeholderText: "1050000"
+                                placeholderText: "258400"
                                 Component.onCompleted: text = root.fContextWindow
                                 onTextChanged: if (text !== root.fContextWindow) root.fContextWindow = text
                                 Connections {
@@ -365,7 +365,7 @@ Item {
                             Fluent.LineEdit {
                                 id: autoCompactEdit
                                 width: 220
-                                placeholderText: "900000"
+                                placeholderText: "245000"
                                 Component.onCompleted: text = root.fAutoCompactLimit
                                 onTextChanged: if (text !== root.fAutoCompactLimit) root.fAutoCompactLimit = text
                                 Connections {
@@ -396,7 +396,7 @@ Item {
                             spacing: Fluent.Enums.spacing.m
                             Fluent.Button {
                                 style: Fluent.Enums.button.style_default
-                                text: "套用 GPT-5.5 长上下文"
+                                text: "套用 GPT-5.5 稳定上下文"
                                 onClicked: root.useGpt55LongContext()
                             }
                             Fluent.Button {
