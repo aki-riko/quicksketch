@@ -1,0 +1,23 @@
+ConfigPilot macOS 首次打开说明
+===============================
+
+当前版本仅支持 Apple Silicon（M 系列芯片），不支持 Intel Mac。
+
+维护者目前没有 Apple Developer Program 会员，因此本 DMG 尚未使用
+Developer ID 签名和 Apple 公证。通过浏览器下载后，macOS Gatekeeper
+可能提示“ConfigPilot 已损坏，无法打开”。这通常是隔离标记导致的，
+不代表 DMG 文件真的损坏。
+
+安装步骤：
+
+1. 把 ConfigPilot 拖入 Applications（应用程序）文件夹。
+2. 打开“终端”（Terminal）。
+3. 复制并执行下面两行命令：
+
+   xattr -dr com.apple.quarantine "/Applications/ConfigPilot.app"
+   open "/Applications/ConfigPilot.app"
+
+同一已安装版本通常只需执行一次。重新下载或升级后，系统可能再次添加
+隔离标记。请只从官方 GitHub Releases 下载 ConfigPilot：
+
+https://github.com/aki-riko/configpilot/releases

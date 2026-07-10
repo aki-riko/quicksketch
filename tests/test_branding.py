@@ -123,6 +123,30 @@ class BrandingTests(unittest.TestCase):
         self.assertIn("minimumWidth: 760", main)
         self.assertIn("minimumHeight: 560", main)
 
+    def test_release_version_and_macos_disclosure_are_consistent(self):
+        version = "1.0.8"
+        self.assertIn(f'set "APP_VER={version}"', self.read("build_nuitka.cmd"))
+        self.assertIn(f'#define AppVer "{version}"', self.read("ConfigPilot.iss"))
+
+        workflow = self.read(".github/workflows/build.yml")
+        self.assertIn(f'default: "{version}"', workflow)
+        self.assertIn(f"github.event.inputs.app_ver || '{version}'", workflow)
+
+        readme = self.read("README.md")
+        macos_build = self.read("scripts/build_macos.sh")
+        first_open = self.read("docs/macos-first-open.txt")
+        release_notes = self.read("docs/release-notes/v1.0.8.md")
+
+        for content in (readme, first_open, release_notes):
+            self.assertIn("Apple Developer Program", content)
+            self.assertIn("xattr -dr com.apple.quarantine", content)
+            self.assertIn("Apple Silicon", content)
+
+        self.assertIn(
+            'cp "docs/macos-first-open.txt" "$STAGING/首次打开说明.txt"',
+            macos_build,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
