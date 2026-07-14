@@ -8,8 +8,12 @@ Fluent.Card {
     property bool installed: false
     property bool developerModeEnabled: false
     property bool thirdPartyEnabled: false
+    property bool gatewayCanEnable: false
     property string profileName: ""
     property string configPath: ""
+
+    signal developerModeToggled(bool value)
+    signal gatewayToggled(bool value)
 
     autoHeight: true
 
@@ -61,11 +65,30 @@ Fluent.Card {
                     font.pixelSize: Fluent.Enums.typography.caption
                     font.family: Fluent.Enums.fontFamily
                 }
-                Fluent.Badge {
-                    text: root.developerModeEnabled ? "已启用" : "等待启用"
-                    level: root.developerModeEnabled
-                           ? Fluent.Enums.statusLevel.success
-                           : Fluent.Enums.statusLevel.attention
+                Fluent.Toggle {
+                    id: developerModeToggle
+                    objectName: "claudeDeveloperModeToggle"
+                    controlType: Fluent.Enums.toggle.control_switch
+                    type: Fluent.Enums.toggle.type_default
+                    text: root.developerModeEnabled ? "已启用" : "未启用"
+
+                    function syncChecked() {
+                        if (checked !== root.developerModeEnabled) {
+                            checked = root.developerModeEnabled
+                        }
+                    }
+
+                    Component.onCompleted: Qt.callLater(syncChecked)
+                    onToggled: function(checkedValue) {
+                        root.developerModeToggled(checkedValue)
+                        Qt.callLater(syncChecked)
+                    }
+                    Connections {
+                        target: root
+                        function onDeveloperModeEnabledChanged() {
+                            developerModeToggle.syncChecked()
+                        }
+                    }
                 }
             }
 
@@ -80,11 +103,31 @@ Fluent.Card {
                     font.pixelSize: Fluent.Enums.typography.caption
                     font.family: Fluent.Enums.fontFamily
                 }
-                Fluent.Badge {
-                    text: root.thirdPartyEnabled ? "已应用" : "待配置"
-                    level: root.thirdPartyEnabled
-                           ? Fluent.Enums.statusLevel.success
-                           : Fluent.Enums.statusLevel.attention
+                Fluent.Toggle {
+                    id: gatewayToggle
+                    objectName: "claudeGatewayToggle"
+                    enabled: root.thirdPartyEnabled || root.gatewayCanEnable
+                    controlType: Fluent.Enums.toggle.control_switch
+                    type: Fluent.Enums.toggle.type_default
+                    text: root.thirdPartyEnabled ? "已应用" : "未启用"
+
+                    function syncChecked() {
+                        if (checked !== root.thirdPartyEnabled) {
+                            checked = root.thirdPartyEnabled
+                        }
+                    }
+
+                    Component.onCompleted: Qt.callLater(syncChecked)
+                    onToggled: function(checkedValue) {
+                        root.gatewayToggled(checkedValue)
+                        Qt.callLater(syncChecked)
+                    }
+                    Connections {
+                        target: root
+                        function onThirdPartyEnabledChanged() {
+                            gatewayToggle.syncChecked()
+                        }
+                    }
                 }
             }
 

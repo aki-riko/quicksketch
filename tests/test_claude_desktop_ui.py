@@ -40,6 +40,13 @@ class ClaudeDesktopUiTests(unittest.TestCase):
 
         self.assertIn("columns: width < 700 ? 2 : 4", status)
         self.assertIn('text: "Claude Desktop"', status)
+        self.assertEqual(status.count("Fluent.Toggle"), 2)
+        self.assertIn('objectName: "claudeDeveloperModeToggle"', status)
+        self.assertIn('objectName: "claudeGatewayToggle"', status)
+        self.assertIn("signal developerModeToggled(bool value)", status)
+        self.assertIn("signal gatewayToggled(bool value)", status)
+        self.assertIn("ClaudeDesktopConfig.setDeveloperModeEnabled(value)", page)
+        self.assertIn("ClaudeDesktopConfig.setThirdPartyEnabled(value)", page)
 
         self.assertIn("Authorization: Bearer", gateway)
         self.assertIn("x-api-key", gateway)

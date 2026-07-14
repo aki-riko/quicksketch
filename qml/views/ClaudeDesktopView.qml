@@ -146,8 +146,20 @@ Item {
                 thirdPartyEnabled: ClaudeDesktopConfig
                                    ? ClaudeDesktopConfig.thirdPartyEnabled
                                    : false
+                gatewayCanEnable: root.fEndpoint.trim().length > 0
+                                  && profileName.length > 0
                 profileName: ClaudeDesktopConfig ? ClaudeDesktopConfig.profileName : ""
                 configPath: ClaudeDesktopConfig ? ClaudeDesktopConfig.configPath : ""
+                onDeveloperModeToggled: function(value) {
+                    if (ClaudeDesktopConfig) {
+                        ClaudeDesktopConfig.setDeveloperModeEnabled(value)
+                    }
+                }
+                onGatewayToggled: function(value) {
+                    if (ClaudeDesktopConfig) {
+                        ClaudeDesktopConfig.setThirdPartyEnabled(value)
+                    }
+                }
             }
 
             ClaudeGatewaySection {

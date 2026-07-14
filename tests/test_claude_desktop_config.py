@@ -210,6 +210,91 @@ class ClaudeDesktopConfigTests(unittest.TestCase):
             self.assertNotIn("inferenceCustomHeaders", cleared)
             self.assertNotIn("inferenceGatewayHeaders", cleared)
 
+    def test_individual_mode_toggles_preserve_gateway_profile_and_settings(self):
+        module = self.load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config, primary, third_party = self.make_config(module, root)
+            self.write_json(
+                primary / "developer_settings.json", {"useMacMenuBarHelper": True}
+            )
+            self.write_json(
+                third_party / "claude_desktop_config.json",
+                {"preferences": {"sidebarMode": "default"}},
+            )
+            config.reload()
+            config.applyConfig(
+                {
+                    "endpoint": "https://gateway.example.com",
+                    "authScheme": "bearer",
+                    "modelsText": "model-a",
+                    "apiKey": "keep-secret",
+                }
+            )
+
+            meta = json.loads(
+                (third_party / "configLibrary" / "_meta.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            profile_path = (
+                third_party / "configLibrary" / f"{meta['appliedId']}.json"
+            )
+            original_profile = profile_path.read_text(encoding="utf-8")
+
+            config.setDeveloperModeEnabled(False)
+            config.setThirdPartyEnabled(False)
+
+            primary_settings = json.loads(
+                (primary / "developer_settings.json").read_text(encoding="utf-8")
+            )
+            third_party_settings = json.loads(
+                (third_party / "developer_settings.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            desktop_config = json.loads(
+                (third_party / "claude_desktop_config.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertFalse(primary_settings["allowDevTools"])
+            self.assertTrue(primary_settings["useMacMenuBarHelper"])
+            self.assertFalse(third_party_settings["allowDevTools"])
+            self.assertEqual(desktop_config["deploymentMode"], "1p")
+            self.assertEqual(
+                desktop_config["preferences"], {"sidebarMode": "default"}
+            )
+            self.assertEqual(profile_path.read_text(encoding="utf-8"), original_profile)
+            self.assertFalse(config.developerModeEnabled)
+            self.assertFalse(config.thirdPartyEnabled)
+
+            config.setDeveloperModeEnabled(True)
+            config.setThirdPartyEnabled(True)
+
+            self.assertTrue(config.developerModeEnabled)
+            self.assertTrue(config.thirdPartyEnabled)
+            self.assertEqual(profile_path.read_text(encoding="utf-8"), original_profile)
+
+    def test_gateway_toggle_requires_a_saved_gateway_profile(self):
+        module = self.load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config, _, third_party = self.make_config(module, root)
+            notices = []
+            config.notify.connect(
+                lambda level, title, message: notices.append((level, title, message))
+            )
+
+            config.setThirdPartyEnabled(True)
+
+            self.assertFalse(
+                (third_party / "claude_desktop_config.json").exists()
+            )
+            self.assertFalse(config.thirdPartyEnabled)
+            self.assertEqual(notices[-1][0], 2)
+            self.assertIn("尚未保存 Gateway 配置", notices[-1][2])
+
     def test_invalid_input_does_not_create_configuration(self):
         module = self.load_module()
         with tempfile.TemporaryDirectory() as tmp:

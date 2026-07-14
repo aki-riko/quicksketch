@@ -380,6 +380,60 @@ class ClaudeDesktopConfig(QObject):
 
         return meta, profile, profile_path
 
+    def _saved_gateway_profile(self) -> dict:
+        meta = _read_json_object(self._meta_path)
+        profile_id, _ = self._active_profile(meta)
+        if not profile_id:
+            raise ValueError("尚未保存 Gateway 配置，请先填写并应用")
+        profile_path = self._config_library_dir / f"{profile_id}.json"
+        profile = _read_json_object(profile_path)
+        if profile.get("inferenceProvider") != "gateway":
+            raise ValueError("当前配置档案不是 Gateway 类型")
+        _validate_endpoint(str(profile.get("inferenceGatewayBaseUrl", "")))
+        return profile
+
+    @Slot(bool)
+    def setDeveloperModeEnabled(self, enabled):
+        try:
+            for path in self._developer_settings_paths:
+                settings = _read_json_object(path)
+                settings["allowDevTools"] = bool(enabled)
+                _atomic_write_json(path, settings)
+            self.reload()
+            state = "启用" if enabled else "关闭"
+            self.notify.emit(
+                1,
+                f"Developer Mode 已{state}",
+                "请完全退出并重新打开 Claude Desktop。",
+            )
+        except Exception as exc:
+            LOGGER.exception("切换 Claude Desktop Developer Mode 失败")
+            self.reload()
+            self.notify.emit(3, "切换失败", str(exc))
+
+    @Slot(bool)
+    def setThirdPartyEnabled(self, enabled):
+        try:
+            if enabled:
+                self._saved_gateway_profile()
+            desktop_config = _read_json_object(self._desktop_config_path)
+            desktop_config["deploymentMode"] = "3p" if enabled else "1p"
+            _atomic_write_json(self._desktop_config_path, desktop_config)
+            self.reload()
+            state = "启用" if enabled else "关闭"
+            self.notify.emit(
+                1,
+                f"Gateway 已{state}",
+                "已保留配置档案；请完全退出并重新打开 Claude Desktop。",
+            )
+        except ValueError as exc:
+            self.reload()
+            self.notify.emit(2, "无法启用 Gateway", str(exc))
+        except Exception as exc:
+            LOGGER.exception("切换 Claude Desktop Gateway 失败")
+            self.reload()
+            self.notify.emit(3, "切换失败", str(exc))
+
     @Slot("QVariantMap")
     def applyConfig(self, cfg):
         try:
