@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 768 768"
+    role="img"
+    aria-labelledby="title description"
+>
+  <title id="title">ConfigPilot AI</title>
+  <desc id="description">A white AI monogram inside a gear on a green rounded square.</desc>
+  <defs>
+    <linearGradient id="background" x1="170" y1="84" x2="602" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1CD878"/>
+      <stop offset="0.48" stop-color="#08C768"/>
+      <stop offset="1" stop-color="#00AD58"/>
+    </linearGradient>
+    <radialGradient id="backgroundGlow" cx="0" cy="0" r="1" gradientTransform="translate(325 280) rotate(55) scale(420 455)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34E58A" stop-opacity="0.48"/>
+      <stop offset="0.58" stop-color="#0FCF70" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#008D49" stop-opacity="0.28"/>
+    </radialGradient>
+    <linearGradient id="gear" x1="236" y1="162" x2="531" y2="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.5" stop-color="#F5FFF9"/>
+      <stop offset="1" stop-color="#D9F3E6"/>
+    </linearGradient>
+    <linearGradient id="gearSheen" x1="263" y1="165" x2="512" y2="566" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.78"/>
+      <stop offset="0.42" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#BFEAD4" stop-opacity="0.34"/>
+    </linearGradient>
+    <filter id="backgroundShadow" x="38" y="44" width="692" height="690" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="11" stdDeviation="17" flood-color="#006D3B" flood-opacity="0.28"/>
+    </filter>
+    <filter id="gearShadow" x="103" y="102" width="562" height="576" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#006D3B" flood-opacity="0.42"/>
+    </filter>
+    <filter id="innerShadow" x="210" y="204" width="348" height="355" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#006A39" flood-opacity="0.34"/>
+    </filter>
+    <mask id="gearMask" maskUnits="userSpaceOnUse" x="112" y="112" width="544" height="544">
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF"/>
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF" transform="rotate(45 384 384)"/>
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF" transform="rotate(90 384 384)"/>
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF" transform="rotate(135 384 384)"/>
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF" transform="rotate(180 384 384)"/>
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF" transform="rotate(225 384 384)"/>
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF" transform="rotate(270 384 384)"/>
+      <rect x="344" y="132" width="80" height="116" rx="13" fill="#FFFFFF" transform="rotate(315 384 384)"/>
+      <circle cx="384" cy="384" r="211" fill="#FFFFFF"/>
+      <circle cx="384" cy="384" r="148" fill="#000000"/>
+    </mask>
+    <clipPath id="backgroundClip">
+      <rect x="70" y="72" width="628" height="626" rx="132"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#backgroundShadow)">
+    <rect x="70" y="72" width="628" height="626" rx="132" fill="url(#background)"/>
+    <rect x="70" y="72" width="628" height="626" rx="132" fill="url(#backgroundGlow)"/>
+    <path d="M92 218C116 125 187 88 286 88H548C617 88 663 124 684 177C617 134 553 121 456 123H257C177 123 126 150 92 218Z"
+          fill="#FFFFFF" fill-opacity="0.08" clip-path="url(#backgroundClip)"/>
+    <rect x="72" y="74" width="624" height="622" rx="130" fill="none" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="4"/>
+  </g>
+
+  <g filter="url(#gearShadow)">
+    <rect x="112" y="112" width="544" height="544" fill="url(#gear)" mask="url(#gearMask)"/>
+    <rect x="112" y="112" width="544" height="544" fill="url(#gearSheen)" mask="url(#gearMask)"/>
+  </g>
+  <circle cx="384" cy="384" r="148" fill="none" stroke="#FFFFFF" stroke-opacity="0.86" stroke-width="4"/>
+  <path d="M205 348C220 246 300 183 402 178C484 174 553 211 591 269"
+        fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="5" stroke-linecap="round"
+        mask="url(#gearMask)"/>
+
+  <g filter="url(#innerShadow)" fill="#FFFFFF">
+    <path d="M263 516L343 309C347 299 353 295 363 295H371C381 295 386 300 390 310L446 461L408 477L366 365L320 481L298 516Z"/>
+    <path d="M309 416C351 432 399 422 444 389C454 382 464 374 474 365"
+          fill="none" stroke="#FFFFFF" stroke-width="29" stroke-linecap="round"/>
+    <rect x="454" y="384" width="31" height="115" rx="6"/>
+    <circle cx="470" cy="351" r="20"/>
+  </g>
+</svg>
