@@ -93,7 +93,7 @@ class BrandingTests(unittest.TestCase):
     def test_icon_sources_are_valid_and_windows_icon_has_multiple_sizes(self):
         png = (ROOT / "resources" / "app_icon.png").read_bytes()
         self.assertEqual(png[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertEqual(struct.unpack(">II", png[16:24]), (768, 768))
+        self.assertEqual(struct.unpack(">II", png[16:24]), (2048, 2048))
         self.assertEqual((png[24], png[25]), (8, 6))
 
         main = self.read("main.py")

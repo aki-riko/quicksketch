@@ -1,5 +1,9 @@
 # ConfigPilot
 
+<p align="center">
+  <img src="resources/app_icon.png" alt="ConfigPilot 图标" width="160">
+</p>
+
 **AI 工具配置与自动化中心。**
 
 ConfigPilot 是一个用 [PrismQML](https://pypi.org/project/prismqml/) 构建的桌面工具。当前支持 OpenAI Codex CLI 与 Claude Desktop：既能管理 `~/.codex/config.toml`，也能一键启用 Claude Desktop Developer Mode 并配置 Third-Party Inference Gateway，免去手动编辑 TOML/JSON。
@@ -52,7 +56,7 @@ open "/Applications/ConfigPilot.app"
 需要 Python 3.11+（用到 `tomllib`）。
 
 ```bash
-git clone https://github.com/aki-riko/configpilot.git
+git clone https://github.com/aki-riko/ConfigPilot.git
 cd configpilot
 python -m venv .venv
 .venv\Scripts\activate          # Windows

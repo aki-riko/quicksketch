@@ -20,4 +20,4 @@ Developer ID 签名和 Apple 公证。通过浏览器下载后，macOS Gatekeepe
 同一已安装版本通常只需执行一次。重新下载或升级后，系统可能再次添加
 隔离标记。请只从官方 GitHub Releases 下载 ConfigPilot：
 
-https://github.com/aki-riko/configpilot/releases
+https://github.com/aki-riko/ConfigPilot/releases
