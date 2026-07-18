@@ -8,11 +8,17 @@ import re
 from pathlib import Path
 
 
+# Max 和 Ultra 是 Codex 需要单独开启的特殊模式，不属于普通思考等级选择器。
+SPECIAL_REASONING_EFFORTS = frozenset({"max", "ultra"})
+
+
 class ModelProfiles:
-    def __init__(self, default_options, profiles, stable_context_preset):
+    def __init__(self, default_options, profiles, stable_context_preset, labels):
         self._default_options = default_options
         self._profiles = profiles
         self._stable_context_preset = stable_context_preset
+        self._labels = labels
+        self._reasoning_overrides = {}
 
     @classmethod
     def from_file(cls, path):
@@ -29,7 +35,12 @@ class ModelProfiles:
         stable_context_preset = cls._normalize_context(
             data.get("stableContextPreset", {}), "stableContextPreset"
         )
-        return cls(default_options, profiles, stable_context_preset)
+        labels = {
+            str(value).strip(): str(text).strip()
+            for value, text in data.get("reasoningLabels", {}).items()
+            if str(value).strip() and str(text).strip()
+        }
+        return cls(default_options, profiles, stable_context_preset, labels)
 
     @staticmethod
     def _normalize_options(raw_options, field_name):
@@ -96,9 +107,40 @@ class ModelProfiles:
         )
 
     def reasoning_options(self, model):
+        override = self._reasoning_overrides.get(str(model or "").strip().lower())
+        if override:
+            return [dict(option) for option in override]
         profile = self.profile_for(model)
         source = profile["reasoningOptions"] if profile else self._default_options
         return [dict(option) for option in source]
+
+    def update_reasoning_from_models(self, models):
+        updated = 0
+        for item in models or []:
+            if not isinstance(item, dict):
+                continue
+            model = str(item.get("slug") or item.get("id") or "").strip().lower()
+            levels = item.get("supported_reasoning_levels")
+            if not model or not isinstance(levels, list):
+                continue
+            options = []
+            seen = set()
+            for level in levels:
+                effort = str(
+                    level.get("effort", "") if isinstance(level, dict) else level
+                ).strip().lower()
+                if (
+                    not effort
+                    or effort in SPECIAL_REASONING_EFFORTS
+                    or effort in seen
+                ):
+                    continue
+                seen.add(effort)
+                options.append({"value": effort, "text": self._labels.get(effort, effort)})
+            if options:
+                self._reasoning_overrides[model] = options
+                updated += 1
+        return updated
 
     def highest_reasoning_effort(self, model):
         """返回当前模型可用的最高非空思考档位。"""
@@ -109,6 +151,9 @@ class ModelProfiles:
         )
 
     def supports_reasoning_effort(self, model, effort):
+        override = self._reasoning_overrides.get(str(model or "").strip().lower())
+        if override:
+            return any(option["value"] == effort for option in override)
         profile = self.profile_for(model)
         if not profile or not effort:
             return True

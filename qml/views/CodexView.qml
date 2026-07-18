@@ -142,7 +142,10 @@ Item {
         })
     }
 
-    Component.onCompleted: syncFromConfig()
+    Component.onCompleted: {
+        syncFromConfig()
+        if (CodexConfig) CodexConfig.refreshReasoningProfiles()
+    }
 
     Connections {
         target: CodexConfig
@@ -164,6 +167,12 @@ Item {
 
         function onChanged() {
             root.syncFromConfig()
+        }
+
+        function onReasoningProfilesChanged() {
+            root.fReasoningEffort = root.normalizedReasoningEffort(
+                root.fModel, root.fReasoningEffort
+            )
         }
     }
 

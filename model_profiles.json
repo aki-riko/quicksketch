@@ -7,6 +7,12 @@
     { "value": "high", "text": "high" },
     { "value": "xhigh", "text": "xhigh" }
   ],
+  "reasoningLabels": {
+    "low": "轻度",
+    "medium": "中",
+    "high": "高",
+    "xhigh": "极高"
+  },
   "stableContextPreset": {
     "menuText": "稳定上下文",
     "contextWindow": 258400,

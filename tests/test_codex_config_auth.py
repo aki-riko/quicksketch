@@ -264,7 +264,28 @@ class CodexConfigAuthTests(unittest.TestCase):
 
                 def read(self):
                     return json.dumps(
-                        {"data": [{"id": model_id} for model_id in model_ids]}
+                        {
+                            "data": [
+                                {
+                                    "id": model_id,
+                                    **(
+                                        {
+                                            "supported_reasoning_levels": [
+                                                {"effort": "low"},
+                                                {"effort": "medium"},
+                                                {"effort": "high"},
+                                                {"effort": "xhigh"},
+                                                {"effort": "max"},
+                                                {"effort": "ultra"},
+                                            ]
+                                        }
+                                        if model_id == "gpt-5.6-sol"
+                                        else {}
+                                    ),
+                                }
+                                for model_id in model_ids
+                            ]
+                        }
                     ).encode("utf-8")
 
             with patch("urllib.request.urlopen", return_value=Response()):
@@ -273,7 +294,16 @@ class CodexConfigAuthTests(unittest.TestCase):
             self.assertEqual(config.availableModels, model_ids)
             self.assertEqual(
                 config.notify.emissions[-1],
-                (1, "获取到 11 个模型", "可在模型下拉列表中选择"),
+                (1, "获取到 11 个模型", "思考等级已从远端同步"),
+            )
+            self.assertEqual(
+                config.reasoningOptionsForModel("gpt-5.6-sol"),
+                [
+                    {"value": "low", "text": "轻度"},
+                    {"value": "medium", "text": "中"},
+                    {"value": "high", "text": "高"},
+                    {"value": "xhigh", "text": "极高"},
+                ],
             )
 
     def test_real_relay_host_gets_v1_for_config_and_model_fetch(self):
@@ -311,7 +341,13 @@ class CodexConfigAuthTests(unittest.TestCase):
                 def read(self):
                     return b'{"data":[{"id":"gpt-5.6-sol"}]}'
 
-            with patch("urllib.request.urlopen", return_value=Response()) as mocked:
+            with (
+                patch("urllib.request.urlopen", return_value=Response()) as mocked,
+                patch(
+                    "backend.codex_config.fetch_codex_model_catalog",
+                    return_value=[],
+                ),
+            ):
                 config._fetch_models_worker("https://api.9li.life", "")
             self.assertEqual(
                 mocked.call_args.args[0].full_url,

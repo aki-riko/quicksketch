@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import shutil
+import threading
 
 try:
     import tomllib  # py3.11+
@@ -19,6 +20,7 @@ except ModuleNotFoundError:  # pragma: no cover
 
 from PySide6.QtCore import QObject, Signal, Slot, Property
 
+from backend.codex_model_catalog import fetch_codex_model_catalog
 from backend.endpoint_urls import append_api_path, normalize_v1_base_url
 from backend.model_profiles import ModelProfiles
 
@@ -43,6 +45,7 @@ class CodexConfig(QObject):
     changed = Signal()                      # 配置读取/写入后刷新 UI
     providersChanged = Signal()             # 预置中转列表变化
     modelsChanged = Signal()                # 获取到的模型列表变化
+    reasoningProfilesChanged = Signal()     # 远端模型目录中的思考等级变化
     notify = Signal(int, str, str)          # (level 0~3, 标题, 内容) -> QML 弹 InfoBar
 
     def __init__(self, parent=None):
@@ -66,6 +69,7 @@ class CodexConfig(QObject):
         self._tool_output_token_limit = ""
         self._model_catalog_json = ""
         self._available_models = []
+        self._reasoning_refresh_lock = threading.Lock()
         self._presets = []
         self._load_presets()
         self.reload()
@@ -309,6 +313,27 @@ class CodexConfig(QObject):
     def stableContextPreset(self):
         return self._model_profiles.stable_context_preset()
 
+    @Slot()
+    def refreshReasoningProfiles(self):
+        threading.Thread(
+            target=self._refresh_reasoning_profiles_worker, daemon=True
+        ).start()
+
+    def _refresh_reasoning_profiles_worker(self):
+        if not self._reasoning_refresh_lock.acquire(blocking=False):
+            return 0
+        try:
+            models = fetch_codex_model_catalog()
+            updated = self._model_profiles.update_reasoning_from_models(models)
+            if updated:
+                self.reasoningProfilesChanged.emit()
+            return updated
+        except Exception as exc:
+            LOGGER.info("无法从 Codex 远端模型目录更新思考等级: %s", exc)
+            return 0
+        finally:
+            self._reasoning_refresh_lock.release()
+
     @staticmethod
     def _set_block_scalar(block, key, value, is_str=True):
         """设置/删除 provider 块内标量字段。value 为 None 时删除。"""
@@ -508,7 +533,6 @@ class CodexConfig(QObject):
             except Exception as exc:
                 key = ""
                 self.notify.emit(2, "认证读取失败", f"auth.json: {exc}")
-        import threading
         threading.Thread(target=self._fetch_models_worker,
                          args=(base_url, key), daemon=True).start()
 
@@ -533,12 +557,18 @@ class CodexConfig(QObject):
             if not ids:
                 self.notify.emit(2, "无模型", "接口返回空列表")
                 return
+            updated = self._model_profiles.update_reasoning_from_models(data)
+            if not updated:
+                updated = self._refresh_reasoning_profiles_worker()
+            else:
+                self.reasoningProfilesChanged.emit()
             self._available_models = ids
             self.modelsChanged.emit()
             self.notify.emit(
                 1,
                 f"获取到 {len(ids)} 个模型",
-                "可在模型下拉列表中选择",
+                "思考等级已从远端同步" if updated
+                else "接口未提供思考等级，已使用内置回退",
             )
         except urllib.error.HTTPError as e:
             self.notify.emit(3, "获取失败", f"HTTP {e.code}: {e.reason}")

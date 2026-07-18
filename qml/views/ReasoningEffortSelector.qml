@@ -18,6 +18,15 @@ Column {
         return "未设置"
     }
 
+    function reloadEffortOptions() {
+        effortBox.effortOptions = CodexConfig
+                                  ? CodexConfig.reasoningOptionsForModel(root.modelName)
+                                  : []
+        effortBox.syncCurrentIndex()
+    }
+
+    onModelNameChanged: reloadEffortOptions()
+
     Text {
         text: "思考等级"
         color: Fluent.Enums.textColor.secondary
@@ -29,9 +38,7 @@ Column {
     Fluent.ComboBoxDefault {
         id: effortBox
         width: Math.min(280, root.width)
-        property var effortOptions: CodexConfig
-                                    ? CodexConfig.reasoningOptionsForModel(root.modelName)
-                                    : []
+        property var effortOptions: []
         model: effortOptions
 
         function syncCurrentIndex() {
@@ -42,7 +49,7 @@ Column {
             if (currentIndex !== found) currentIndex = found
         }
 
-        Component.onCompleted: Qt.callLater(syncCurrentIndex)
+        Component.onCompleted: Qt.callLater(root.reloadEffortOptions)
         onEffortOptionsChanged: syncCurrentIndex()
         onActivated: function(index) {
             if (index >= 0 && index < effortOptions.length) {
@@ -54,6 +61,13 @@ Column {
             target: root
             function onReasoningEffortChanged() {
                 effortBox.syncCurrentIndex()
+            }
+        }
+
+        Connections {
+            target: CodexConfig
+            function onReasoningProfilesChanged() {
+                root.reloadEffortOptions()
             }
         }
     }
