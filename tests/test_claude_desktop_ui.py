@@ -94,6 +94,25 @@ class ClaudeDesktopUiTests(unittest.TestCase):
         self.assertIn('objectName: "claudeAuthSchemeBox"', gateway)
         self.assertIn("Layout.preferredHeight: root.controlHeight", gateway)
         self.assertIn('objectName: "claudeClearKeyToggle"', gateway)
+        self.assertIn("id: gatewayGrid", gateway)
+        self.assertIn("uniformCellWidths: columns === 2", gateway)
+        self.assertIn("readonly property real equalItemWidth", gateway)
+        self.assertEqual(
+            gateway.count("Layout.preferredWidth: gatewayGrid.equalItemWidth"), 2
+        )
+        self.assertEqual(
+            gateway.count("Layout.maximumWidth: gatewayGrid.equalItemWidth"), 2
+        )
+        self.assertIn("Fluent.Enums.toggle.control_checkbox", gateway)
+        self.assertNotIn("Fluent.Enums.toggle.control_switch", gateway)
+        self.assertIn('text: "应用时删除"', gateway)
+        self.assertIn("visible: root.hasApiKey", gateway)
+        self.assertEqual(
+            gateway.count(
+                "Layout.preferredHeight: Fluent.Enums.controlSize.checkboxOuter"
+            ),
+            2,
+        )
         self.assertEqual(gateway.count("Layout.alignment: Qt.AlignTop"), 2)
 
         self.assertIn(
@@ -110,9 +129,28 @@ class ClaudeDesktopUiTests(unittest.TestCase):
         self.assertIn("/v1/models", advanced)
         self.assertIn("Fluent.Expander", advanced)
         self.assertIn("columns: width < 680 ? 1 : 2", advanced)
+        self.assertIn("uniformCellWidths: columns === 2", advanced)
+        self.assertIn("readonly property real equalItemWidth", advanced)
+        self.assertEqual(
+            advanced.count("Layout.preferredWidth: advancedGrid.equalItemWidth"), 2
+        )
+        self.assertEqual(
+            advanced.count("Layout.maximumWidth: advancedGrid.equalItemWidth"), 2
+        )
         self.assertEqual(advanced.count("Layout.alignment: Qt.AlignTop"), 2)
         self.assertIn("输入 JSON 对象覆盖现有值", advanced)
         self.assertIn("敏感内容不会回显", advanced)
+        self.assertIn('objectName: "claudeClearHeadersToggle"', advanced)
+        self.assertIn("Fluent.Enums.toggle.control_checkbox", advanced)
+        self.assertNotIn("Fluent.Enums.toggle.control_switch", advanced)
+        self.assertIn('text: "应用时删除"', advanced)
+        self.assertIn("visible: root.headerCount > 0", advanced)
+        self.assertEqual(
+            advanced.count(
+                "Layout.preferredHeight: Fluent.Enums.controlSize.checkboxOuter"
+            ),
+            2,
+        )
 
 
 if __name__ == "__main__":

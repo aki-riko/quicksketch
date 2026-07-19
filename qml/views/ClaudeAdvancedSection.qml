@@ -22,12 +22,21 @@ Fluent.Expander {
         id: advancedGrid
         width: parent ? parent.width : 0
         columns: width < 680 ? 1 : 2
+        uniformCellWidths: columns === 2
         columnSpacing: Fluent.Enums.spacing.l
         rowSpacing: Fluent.Enums.spacing.l
+        readonly property real equalItemWidth: columns === 2
+                                               ? Math.max(
+                                                     0,
+                                                     (width - columnSpacing) / 2
+                                                 )
+                                               : width
 
         ColumnLayout {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
+            Layout.preferredWidth: advancedGrid.equalItemWidth
+            Layout.maximumWidth: advancedGrid.equalItemWidth
             Layout.alignment: Qt.AlignTop
             spacing: Fluent.Enums.spacing.xxs
 
@@ -39,13 +48,19 @@ Fluent.Expander {
                 font.bold: true
                 font.family: Fluent.Enums.fontFamily
             }
-            Text {
+            RowLayout {
                 Layout.fillWidth: true
-                text: "每行一个，第一个为默认；留空使用 /v1/models"
-                color: Fluent.Enums.textColor.tertiary
-                font.pixelSize: Fluent.Enums.typography.caption
-                font.family: Fluent.Enums.fontFamily
-                wrapMode: Text.WordWrap
+                Layout.preferredHeight: Fluent.Enums.controlSize.checkboxOuter
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    text: "每行一个，第一个为默认；留空使用 /v1/models"
+                    color: Fluent.Enums.textColor.tertiary
+                    font.pixelSize: Fluent.Enums.typography.caption
+                    font.family: Fluent.Enums.fontFamily
+                    elide: Text.ElideRight
+                }
             }
             Fluent.TextEdit {
                 id: modelsEdit
@@ -73,6 +88,8 @@ Fluent.Expander {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
+            Layout.preferredWidth: advancedGrid.equalItemWidth
+            Layout.maximumWidth: advancedGrid.equalItemWidth
             Layout.alignment: Qt.AlignTop
             spacing: Fluent.Enums.spacing.xxs
 
@@ -86,13 +103,45 @@ Fluent.Expander {
                 font.bold: true
                 font.family: Fluent.Enums.fontFamily
             }
-            Text {
+            RowLayout {
                 Layout.fillWidth: true
-                text: "输入 JSON 对象覆盖现有值；敏感内容不会回显"
-                color: Fluent.Enums.textColor.tertiary
-                font.pixelSize: Fluent.Enums.typography.caption
-                font.family: Fluent.Enums.fontFamily
-                wrapMode: Text.WordWrap
+                Layout.preferredHeight: Fluent.Enums.controlSize.checkboxOuter
+                spacing: Fluent.Enums.spacing.s
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    text: "输入 JSON 对象覆盖现有值；敏感内容不会回显"
+                    color: Fluent.Enums.textColor.tertiary
+                    font.pixelSize: Fluent.Enums.typography.caption
+                    font.family: Fluent.Enums.fontFamily
+                    elide: Text.ElideRight
+                }
+
+                Fluent.Toggle {
+                    id: clearHeadersToggle
+                    objectName: "claudeClearHeadersToggle"
+                    Layout.alignment: Qt.AlignVCenter
+                    enabled: root.headerCount > 0
+                    visible: root.headerCount > 0
+                    controlType: Fluent.Enums.toggle.control_checkbox
+                    type: Fluent.Enums.toggle.type_default
+                    text: "应用时删除"
+                    Component.onCompleted: Qt.callLater(function() {
+                        checked = root.clearHeadersValue
+                    })
+                    onToggled: function(checkedValue) {
+                        root.clearHeadersToggled(checkedValue)
+                    }
+                    Connections {
+                        target: root
+                        function onClearHeadersValueChanged() {
+                            if (clearHeadersToggle.checked !== root.clearHeadersValue) {
+                                clearHeadersToggle.checked = root.clearHeadersValue
+                            }
+                        }
+                    }
+                }
             }
             Fluent.TextEdit {
                 id: headersEdit
@@ -112,28 +161,6 @@ Fluent.Expander {
                     function onHeadersValueChanged() {
                         if (headersEdit.text !== root.headersValue) {
                             headersEdit.text = root.headersValue
-                        }
-                    }
-                }
-            }
-            Fluent.Toggle {
-                id: clearHeadersToggle
-                objectName: "claudeClearHeadersToggle"
-                enabled: root.headerCount > 0
-                controlType: Fluent.Enums.toggle.control_switch
-                type: Fluent.Enums.toggle.type_default
-                text: "删除已保存的请求头"
-                Component.onCompleted: Qt.callLater(function() {
-                    checked = root.clearHeadersValue
-                })
-                onToggled: function(checkedValue) {
-                    root.clearHeadersToggled(checkedValue)
-                }
-                Connections {
-                    target: root
-                    function onClearHeadersValueChanged() {
-                        if (clearHeadersToggle.checked !== root.clearHeadersValue) {
-                            clearHeadersToggle.checked = root.clearHeadersValue
                         }
                     }
                 }

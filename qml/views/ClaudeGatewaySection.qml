@@ -104,14 +104,24 @@ Fluent.Card {
         }
 
         GridLayout {
+            id: gatewayGrid
             width: cardColumn.innerWidth
             columns: width < 620 ? 1 : 2
+            uniformCellWidths: columns === 2
             columnSpacing: Fluent.Enums.spacing.l
             rowSpacing: Fluent.Enums.spacing.s
+            readonly property real equalItemWidth: columns === 2
+                                                   ? Math.max(
+                                                         0,
+                                                         (width - columnSpacing) / 2
+                                                     )
+                                                   : width
 
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
+                Layout.preferredWidth: gatewayGrid.equalItemWidth
+                Layout.maximumWidth: gatewayGrid.equalItemWidth
                 Layout.alignment: Qt.AlignTop
                 spacing: Fluent.Enums.spacing.xxs
 
@@ -155,21 +165,29 @@ Fluent.Card {
                     }
                 }
 
-                Text {
+                RowLayout {
                     Layout.fillWidth: true
-                    text: root.authSchemeValue === "x-api-key"
-                          ? "密钥将写入 x-api-key 请求头"
-                          : "密钥将作为 Bearer Token 发送"
-                    color: Fluent.Enums.textColor.tertiary
-                    font.pixelSize: Fluent.Enums.typography.caption
-                    font.family: Fluent.Enums.fontFamily
-                    elide: Text.ElideRight
+                    Layout.preferredHeight: Fluent.Enums.controlSize.checkboxOuter
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        text: root.authSchemeValue === "x-api-key"
+                              ? "密钥将写入 x-api-key 请求头"
+                              : "密钥将作为 Bearer Token 发送"
+                        color: Fluent.Enums.textColor.tertiary
+                        font.pixelSize: Fluent.Enums.typography.caption
+                        font.family: Fluent.Enums.fontFamily
+                        elide: Text.ElideRight
+                    }
                 }
             }
 
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
+                Layout.preferredWidth: gatewayGrid.equalItemWidth
+                Layout.maximumWidth: gatewayGrid.equalItemWidth
                 Layout.alignment: Qt.AlignTop
                 spacing: Fluent.Enums.spacing.xxs
 
@@ -208,11 +226,12 @@ Fluent.Card {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Fluent.Enums.controlSize.switchHeight
+                    Layout.preferredHeight: Fluent.Enums.controlSize.checkboxOuter
                     spacing: Fluent.Enums.spacing.s
 
                     Text {
                         Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
                         text: root.hasApiKey
                               ? "留空将保留当前密钥"
                               : "仅写入本机 Claude 配置"
@@ -228,9 +247,9 @@ Fluent.Card {
                         Layout.alignment: Qt.AlignVCenter
                         enabled: root.hasApiKey
                         visible: root.hasApiKey
-                        controlType: Fluent.Enums.toggle.control_switch
+                        controlType: Fluent.Enums.toggle.control_checkbox
                         type: Fluent.Enums.toggle.type_default
-                        text: "删除"
+                        text: "应用时删除"
                         Component.onCompleted: Qt.callLater(function() {
                             checked = root.clearApiKeyValue
                         })
