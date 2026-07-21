@@ -87,7 +87,8 @@ class ClaudeDesktopUiTests(unittest.TestCase):
 
         self.assertIn("Authorization: Bearer", gateway)
         self.assertIn("x-api-key", gateway)
-        self.assertIn("自动补全 /v1", gateway)
+        self.assertIn("原样写入", gateway)
+        self.assertNotIn("自动补全 /v1", gateway)
         self.assertIn('text: "网关连接"', gateway)
         self.assertIn("type_password", gateway)
         self.assertIn("留空保持不变", gateway)

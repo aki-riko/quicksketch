@@ -85,7 +85,7 @@ Fluent.Card {
                 objectName: "claudeEndpointEdit"
                 width: parent.width
                 height: root.controlHeight
-                placeholderText: "https://llm-gateway.example.com（自动补全 /v1）"
+                placeholderText: "https://llm-gateway.example.com（原样写入）"
                 Component.onCompleted: Qt.callLater(function() {
                     text = root.endpointValue
                 })

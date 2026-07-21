@@ -12,9 +12,6 @@ import tempfile
 from urllib.parse import urlparse
 import uuid
 
-from backend.endpoint_urls import normalize_v1_base_url
-
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -114,8 +111,13 @@ def parse_headers(text: str) -> dict[str, str]:
 
 
 def validate_endpoint(value: str) -> str:
+    """校验并原样返回 Claude Gateway 根地址。
+
+    Claude Desktop 会自行追加 ``/v1/messages``，这里不能复用 Codex 的
+    ``/v1`` 归一化逻辑，否则会产生重复的版本路径。
+    """
     endpoint = value.strip()
     parsed = urlparse(endpoint)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ValueError("Gateway endpoint 必须是完整的 http(s) URL")
-    return normalize_v1_base_url(endpoint)
+    return endpoint

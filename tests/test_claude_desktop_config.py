@@ -198,7 +198,7 @@ class ClaudeDesktopConfigTests(unittest.TestCase):
             self.assertEqual(profile["inferenceProvider"], "gateway")
             self.assertEqual(profile["inferenceCredentialKind"], "static")
             self.assertEqual(
-                profile["inferenceGatewayBaseUrl"], "https://api.9li.life/v1"
+                profile["inferenceGatewayBaseUrl"], "https://api.9li.life"
             )
             self.assertEqual(profile["inferenceGatewayAuthScheme"], "bearer")
             self.assertEqual(profile["inferenceGatewayApiKey"], "new-secret")
